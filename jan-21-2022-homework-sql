@@ -1,0 +1,161 @@
+--Question 1.
+
+--SELECT *
+--FROM Vendors JOIN Invoices
+--	ON Vendors.VendorID = Invoices.InvoiceID
+
+	--Question 2
+
+--SELECT VendorName, InvoiceNumber, InvoiceDate, (InvoiceTotal-(PaymentTotal+CreditTotal)) AS Balance
+--FROM Vendors AS v JOIN Invoices AS i
+--	ON v.VendorID = i.InvoiceID
+--WHERE (InvoiceTotal-(PaymentTotal+CreditTotal)) <> 0
+--ORDER BY VendorName
+
+--Question 3
+
+--SELECT VendorName, DefaultAccountNo, AccountDescription
+--FROM Vendors AS v JOIN GLAccounts AS gla
+--	ON v.DefaultAccountNo = gla.AccountNo
+--ORDER BY AccountDescription, VendorName
+
+--Question 4
+
+--SELECT VendorName, InvoiceNumber, InvoiceDate, (InvoiceTotal-(PaymentTotal+CreditTotal)) AS Balance
+--FROM Vendors AS v, Invoices AS i
+--WHERE v.VendorID = i.InvoiceID AND (InvoiceTotal-(PaymentTotal+CreditTotal)) <> 0
+--ORDER BY VendorName
+
+--Question 5
+
+--SELECT VendorName AS Vendor,
+--		InvoiceDate AS Date,
+--		InvoiceNumber AS Number,
+--		InvoiceSequence AS [#],
+--		InvoiceLineItemAmount AS LineItem
+--FROM Vendors AS v JOIN Invoices AS i
+--	ON v.VendorID = i.InvoiceID
+--	JOIN InvoiceLineItems as ili
+--	ON ili.InvoiceID = i.InvoiceID
+--ORDER BY Vendor, Date, Number, [#]
+
+--Question 6
+
+--SELECT DISTINCT v1.VendorID, v1.VendorName, (v1.VendorContactFName +' '+ v1.VendorContactLName) AS Name
+--FROM Vendors AS v1 JOIN Vendors AS v2
+--	ON v1.VendorID <> v2.VendorID
+--	AND v1.VendorContactFName = v2.VendorContactFName
+--ORDER BY Name
+
+--QUESTION 7
+
+--SELECT gla.AccountNo, AccountDescription
+--FROM GLAccounts AS gla LEFT JOIN InvoiceLineItems AS ili
+--	On gla.AccountNo = ili.AccountNo
+--WHERE ili.AccountNo IS NULL
+--ORDER BY gla.AccountNo
+
+--SELECT VendorName, VendorState
+--FROM Vendors
+--WHERE VendorState = 'CA'
+--UNION
+--SELECT VendorName, ('OUTSIDE CA' + '('+ VendorState +')') AS Outside
+--FROM Vendors
+--WHERE VendorState <> 'CA'
+--ORDER BY VendorName
+
+-------------------------------
+--CHAPTER 5
+
+--Question 1
+
+--SELECT VendorID, SUM(PaymentTotal) AS PaymentSum
+--FROM Invoices
+--	GROUP BY Invoices.VendorID
+--ORDER BY VendorID
+
+--Question 2
+ 
+-- SELECT TOP(10) VendorName, SUM(PaymentTotal) AS PaymentSum
+-- FROM Invoices JOIN Vendors
+--	ON Invoices.InvoiceID = Vendors.VendorID
+--GROUP BY VendorName
+
+--Question 3
+
+--SELECT VendorName, COUNT(*) AS InvoiceCount, SUM(InvoiceTotal) AS InvoiceSum
+--FROM Invoices JOIN Vendors
+--	On Invoices.InvoiceID = Vendors.VendorID
+--GROUP BY VendorName
+--ORDER BY InvoiceCount
+
+--Question 4
+
+--SELECT gla.AccountDescription, 
+--	COUNT(*) AS LineItemCount, 
+--	SUM(InvoiceLineItemAmount) AS LineItemSum
+--FROM GLAccounts AS gla JOIN InvoiceLineItems AS ili
+--	ON gla.AccountNo = ili.AccountNo
+--GROUP BY AccountDescription
+--HAVING COUNT(*) > 1
+--ORDER BY LineItemCount DESC;
+
+--Question 5
+
+--SELECT*
+--FROM Invoices
+--2019-11-08
+
+--SELECT gla.AccountDescription, 
+--	COUNT(*) AS LineItemCount, 
+--	SUM(InvoiceLineItemAmount) AS LineItemSum
+--FROM GLAccounts AS gla JOIN InvoiceLineItems AS ili
+--	ON gla.AccountNo = ili.AccountNo
+--	JOIN Invoices as i ON i.InvoiceID = ili.InvoiceID
+--WHERE i.InvoiceDate BETWEEN '2019-10-01' AND '2019-12-31'
+--GROUP BY AccountDescription
+--HAVING COUNT(*) > 1
+--ORDER BY LineItemCount DESC;
+
+--Question 6
+
+--SELECT SUM(InvoiceLineItemAmount) AS InvoiceQty, AccountNo
+--FROM InvoiceLineItems
+--GROUP BY AccountNo WITH ROLLUP;
+
+--Question 7
+
+--SELECT VendorName, gla.AccountDescription, 
+--		COUNT(*) AS LineItemCount, 
+--		SUM(InvoiceLineItemAmount) AS LineItemSum
+--FROM Vendors AS v JOIN InvoiceLineItems AS ili
+--	ON v.vendorID = ili.InvoiceID
+--	JOIN Invoices as i ON i.VendorID = v.VendorID
+--	JOIN GLAccounts AS gla ON gla.AccountNo = ili.AccountNo
+--GROUP BY v.VendorName, gla.AccountDescription
+--ORDER BY v.VendorName, gla.AccountDescription;
+
+--Question 8
+
+--Write a SELECT statement that answers this question: Which 
+--vendors are being paid from more than one account? Return 
+--two columns: the vendor name and the total number of accounts 
+--that apply to that vendor’s invoices. Hint: Use the DISTINCT 
+--keyword to count InvoiceLineItems.AccountNo.
+
+--SELECT VendorName, COUNT(DISTINCT ili.AccountNo) AS NumberOfAccounts
+--FROM Vendors AS v JOIN Invoices AS i
+--	ON v.VendorID = i.VendorID
+--	JOIN InvoiceLineItems AS ili
+--	ON i.InvoiceID = ili.InvoiceID
+--GROUP BY VendorName
+--HAVING COUNT(DISTINCT ili.AccountNo) > 1
+--ORDER BY VendorName
+
+--Question 9
+
+--SELECT DISTINCT i.VendorID,i.InvoiceDate, i.InvoiceTotal, 
+--		SUM(i.InvoiceTotal) OVER(PARTITION BY VendorID)AS VendorTotal, 
+--		COUNT(i.InvoiceID) OVER(PARTITION BY VendorID) AS VendorCount, 
+--		AVG(i.InvoiceTotal) OVER(PARTITION BY VendorID)AS VendorAvg
+--FROM Invoices AS i
