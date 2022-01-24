@@ -1,0 +1,77 @@
+------------------------------------------
+-- CHAPTER 6 EXERCISES
+-----------------------------------------
+--1. Turn this code into a subquery with the same results
+--SELECT DISTINCT VendorName 
+--FROM Vendors JOIN Invoices
+--	ON Vendors.VendorID = Invoices.VendorID 
+--ORDER BY VendorName;
+
+--SELECT VendorName
+--FROM Vendors
+--WHERE VendorID IN
+--	(SELECT VendorId
+--	FROM Invoices)
+--ORDER BY VendorName;
+
+--2. Write a SELECT statement that answers this question: 
+--Which invoices have a PaymentTotal that’s greater than 
+--the average PaymentTotal for all paid invoices? Return 
+--the InvoiceNumber and InvoiceTotal for each 
+
+--SELECT InvoiceNumber, InvoiceTotal
+--FROM Invoices
+--WHERE PaymentTotal >
+--	(SELECT AVG(PaymentTotal)
+--	FROM Invoices)
+
+--3. Write a SELECT statement that answers this question: 
+--Which invoices have a PaymentTotal that’s greater than the 
+--median PaymentTotal for all paid invoices? (The median marks 
+--the midpoint in a set of values; an equal number of values lie 
+--above and below it.) Return the InvoiceNumber and InvoiceTotal 
+--for each invoice.
+--Hint: Begin with the solution to exercise 2, then use the ALL 
+--keyword in the WHERE clause and code “TOP 50 PERCENT PaymentTotal” 
+--in the subquery
+
+--SELECT InvoiceNumber, InvoiceTotal
+--FROM Invoices
+--WHERE PaymentTotal > ALL
+--	(SELECT TOP 50 PERCENT PaymentTotal
+--	FROM Invoices
+--	--Added this where line after seeing answer, PaymentTotal <> 0 exists because it has to 
+--	--be a 'Paid invoice' so if it equaled '0' then it would not have been paid
+--	WHERE PaymentTotal <>0
+--	ORDER BY PaymentTotal)
+
+--4. Write a SELECT statement that returns two columns 
+--from the GLAccounts table: AccountNo and AccountDescription. 
+--The result set should have one row for each account number that 
+--has never been used. Use a correlated subquery introduced with 
+--the NOT EXISTS operator. Sort the final result set by AccountNo.
+
+--SELECT AccountNo, AccountDescription
+--FROM GLAccounts
+--WHERE NOT EXISTS
+--	(SELECT *
+--	FROM InvoiceLineItems
+--	--Made a mistake here doing GlAccounts.AccountNo <> InvoiceLineItems.AccountNo
+--	--Which is funny because that would give us the EXACT opposite results of what we needed
+--	WHERE GLAccounts.AccountNo =InvoiceLineItems.AccountNo)
+--ORDER BY AccountNo
+
+--5. Write a SELECT statement that returns four columns: 
+--VendorName, InvoiceID, InvoiceSequence, and InvoiceLineItemAmount 
+--for each invoice that has more than one line item in the InvoiceLineItems table.
+--Hint: Use a subquery that tests for InvoiceSequence > 1.
+
+--SELECT VendorName, i.InvoiceID, ili.InvoiceSequence, ili.InvoiceLineItemAmount
+--FROM Vendors AS v 
+--	JOIN Invoices as i ON v.VendorID = i.VendorID
+--	JOIN InvoiceLineItems AS ili ON i.InvoiceID = ili.InvoiceID
+--WHERE i.InvoiceID IN
+--	(SELECT ili.InvoiceID
+--	FROM InvoiceLineItems 
+--	WHERE ili.InvoiceSequence >1 )
+--ORDER BY VendorName, i.InvoiceID, InvoiceSequence;
