@@ -1,0 +1,31 @@
+--CHAPTER 8 EXERCISES
+--1.
+--  SELECT CAST(InvoiceTotal AS decimal(10,2)) AS InvoiceTotalDecimalCast,
+--		CAST(InvoiceTotal AS varchar) AS InvoiceTotalVarcharCast,
+--		CONVERT(decimal(10,2), InvoiceTotal) AS InvoiceTotalDecimalConvert,
+--		CONVERT(varchar, InvoiceTotal) AS InvoiceTotalVarcharConvert
+--  FROM Invoices;
+
+--2.
+
+--SELECT CAST(InvoiceDate AS varchar) AS InvoiceDateVarchar,
+--	CONVERT(varchar, InvoiceDate, 1) AS InvoiceDateConvertOne,
+--	CONVERT(varchar, InvoiceDate, 10) AS InvoiceDateConvertTen
+
+--FROM Invoices
+
+--1. AGAIN
+
+--SELECT CAST(InvoiceTotal AS decimal(10,2)) AS InvoiceTotalCastDecimal,
+--	CAST(InvoiceTotal AS varchar(8)) AS InvoiceTotalCastVarchar,
+--	CONVERT(decimal(10,2), InvoiceTotal) As InvoiceTotalConvertDecimal,
+--	CONVERT(varchar(8), InvoiceTotal) AS InvoiceTotalConvertVarchar
+
+--	FROM Invoices;
+
+--2. AGAIN
+
+--SELECT CAST(InvoiceDate AS varchar(8)) AS InvoiceDateVarcharCast,
+--		CONVERT(varchar, InvoiceDate, 1) AS InvoiceDateConvertStyleOne,
+--		CONVERT(varchar, InvoiceDate, 10) AS InvoiceDateConvertStyleTen
+--FROM Invoices;
