@@ -197,3 +197,113 @@
 --grouped by VendorID, filtering for invoices with a balance due
 
 -- Its LATE... Ill do this in the morning
+
+--CHAPTER 7 Homework
+
+--1. Write SELECT INTO statements to create two test tables named 
+--VendorCopy and InvoiceCopy that are complete copies of the Vendors 
+--and Invoices tables. If VendorCopy and InvoiceCopy already exist, 
+--first code two DROP TABLE statements to delete them.
+
+--SELECT *
+--INTO VendorCopy
+--FROM Vendors
+
+--SELECT *
+--INTO InvoiceCopy
+--FROM Invoices
+
+--DROP TABLE VendorCopy;
+--DROP TABLE InvoiceCopy;
+
+--2. Write an INSERT statement that adds a row to the InvoiceCopy table 
+--with the following values: 
+--VendorID: 32 
+--InvoiceTotal: $434.58 
+--TermsID: 2 
+--InvoiceNumber: AX-014-027 
+--PaymentTotal: $0.00 
+--InvoiceDueDate: 05/8/2020 
+--InvoiceDate: 4/21/2020 
+--CreditTotal: $0.00 
+--PaymentDate: null
+
+--INSERT InvoiceCopy
+--VALUES (32, 'AX-014-027', '2012-6-21', 434.58, 0, 0,
+--        2, '2012-07-08', NULL);
+
+--3. Write an INSERT statement that adds a row to the VendorCopy 
+--table for each non-California vendor in the Vendors table. 
+--(This will result in duplicate vendors in the VendorCopy table).
+
+--I learned you can not do the SELECT * here; its a rule of INSERT. So you have to
+--manually do them all
+
+--INSERT VendorCopy
+--SELECT VendorName, VendorAddress1, VendorAddress2, VendorCity, VendorState, 
+--		VendorZipCode, VendorPhone, VendorContactLName, VendorContactFName,
+--		DefaultTermsID, DefaultAccountNo
+--FROM Vendors
+--WHERE VendorState <> 'CA'
+
+--4. Write an UPDATE statement that modifies the VendorCopy table. 
+--Change the default account number to 403 for each vendor that has a 
+--default account number of 400
+
+--UPDATE VendorCopy
+--SET DefaultAccountNo = 403
+--WHERE DefaultAccountNo = 400;
+
+--5. Write an UPDATE statement that modifies the InvoiceCopy table. 
+--Change the PaymentDate to today’s date and the PaymentTotal to the 
+--balance due for each invoice with a balance due. Set today’s date 
+--with a literal date string, or use the GETDATE() function
+
+-- The wording on this one was tricky; PaymentTotal = Invoice - CreditTotal
+--UPDATE InvoiceCopy
+--SET PaymentDate = GETDATE(),
+--	PaymentTotal = InvoiceTotal - CreditTotal
+--WHERE (InvoiceTotal - PaymentTotal - CreditTotal) >0;
+
+--6. Write an UPDATE statement that modifies the InvoiceCopy table. 
+--Change TermsID to 2 for each invoice that’s from a vendor with a 
+--DefaultTermsID of 2. Use a subquery.
+
+--I tried to use Vendors instead of VendorCopy in the Subquery... 
+--I am unsure why it is VendorCopy to be honest... Sleepy...
+
+--UPDATE InvoiceCopy
+--SET TermsID = 2
+--WHERE VendorID IN
+--		(SELECT VendorID
+--		FROM VendorCopy
+--		WHERE DefaultTermsID = 2);
+
+--7.Solve exercise 6 using a join rather than a subquery.
+
+--I think JOIN makes more sense(at least to me) than subqueries do for simple concepts.
+--UPDATE InvoiceCopy
+--SET TermsID = 2
+--FROM InvoiceCopy JOIN VendorCopy
+--	ON InvoiceCopy.VendorID = VendorCopy.VendorID
+--WHERE DefaultTersID =2;
+
+--8. Write a DELETE statement that deletes all vendors 
+--in the state of Minnesota from the VendorCopy table
+
+--DELETE VendorCopy
+--WHERE VendorState = 'MN';
+
+--9. Write a DELETE statement for the VendorCopy table. 
+--Delete the vendors that are located in states from which 
+--no vendor has ever sent an invoice.
+
+--Hint: Use a subquery coded with “SELECT DISTINCT VendorState” 
+--introduced with the NOT IN operato
+
+--Not going to lie, I just took this after failing once on it... I am very sleepy
+--DELETE VendorCopy
+--WHERE VendorState NOT IN (SELECT DISTINCT VendorState
+--			FROM VendorCopy JOIN InvoiceCopy
+--				ON VendorCopy.VendorID = InvoiceCopy.VendorID);
+		
