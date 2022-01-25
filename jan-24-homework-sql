@@ -1,0 +1,309 @@
+------------------------------------------
+-- CHAPTER 6 EXERCISES
+-----------------------------------------
+--1. Turn this code into a subquery with the same results
+--SELECT DISTINCT VendorName 
+--FROM Vendors JOIN Invoices
+--	ON Vendors.VendorID = Invoices.VendorID 
+--ORDER BY VendorName;
+
+--SELECT VendorName
+--FROM Vendors
+--WHERE VendorID IN
+--	(SELECT VendorId
+--	FROM Invoices)
+--ORDER BY VendorName;
+
+--2. Write a SELECT statement that answers this question: 
+--Which invoices have a PaymentTotal that’s greater than 
+--the average PaymentTotal for all paid invoices? Return 
+--the InvoiceNumber and InvoiceTotal for each 
+
+--SELECT InvoiceNumber, InvoiceTotal
+--FROM Invoices
+--WHERE PaymentTotal >
+--	(SELECT AVG(PaymentTotal)
+--	FROM Invoices)
+
+--3. Write a SELECT statement that answers this question: 
+--Which invoices have a PaymentTotal that’s greater than the 
+--median PaymentTotal for all paid invoices? (The median marks 
+--the midpoint in a set of values; an equal number of values lie 
+--above and below it.) Return the InvoiceNumber and InvoiceTotal 
+--for each invoice.
+--Hint: Begin with the solution to exercise 2, then use the ALL 
+--keyword in the WHERE clause and code “TOP 50 PERCENT PaymentTotal” 
+--in the subquery
+
+--SELECT InvoiceNumber, InvoiceTotal
+--FROM Invoices
+--WHERE PaymentTotal > ALL
+--	(SELECT TOP 50 PERCENT PaymentTotal
+--	FROM Invoices
+--	--Added this where line after seeing answer, PaymentTotal <> 0 exists because it has to 
+--	--be a 'Paid invoice' so if it equaled '0' then it would not have been paid
+--	WHERE PaymentTotal <>0
+--	ORDER BY PaymentTotal)
+
+--4. Write a SELECT statement that returns two columns 
+--from the GLAccounts table: AccountNo and AccountDescription. 
+--The result set should have one row for each account number that 
+--has never been used. Use a correlated subquery introduced with 
+--the NOT EXISTS operator. Sort the final result set by AccountNo.
+
+--SELECT AccountNo, AccountDescription
+--FROM GLAccounts
+--WHERE NOT EXISTS
+--	(SELECT *
+--	FROM InvoiceLineItems
+--	--Made a mistake here doing GlAccounts.AccountNo <> InvoiceLineItems.AccountNo
+--	--Which is funny because that would give us the EXACT opposite results of what we needed
+--	WHERE GLAccounts.AccountNo =InvoiceLineItems.AccountNo)
+--ORDER BY AccountNo
+
+--5. Write a SELECT statement that returns four columns: 
+--VendorName, InvoiceID, InvoiceSequence, and InvoiceLineItemAmount 
+--for each invoice that has more than one line item in the InvoiceLineItems table.
+--Hint: Use a subquery that tests for InvoiceSequence > 1.
+
+--SELECT VendorName, i.InvoiceID, ili.InvoiceSequence, ili.InvoiceLineItemAmount
+--FROM Vendors AS v 
+--	JOIN Invoices as i ON v.VendorID = i.VendorID
+--	JOIN InvoiceLineItems AS ili ON i.InvoiceID = ili.InvoiceID
+--WHERE i.InvoiceID IN
+--	(SELECT ili.InvoiceID
+--	FROM InvoiceLineItems 
+--	WHERE ili.InvoiceSequence >1 )
+--ORDER BY VendorName, i.InvoiceID, InvoiceSequence;
+
+--6.Write a SELECT statement that returns a single value that 
+--represents the sum of the largest unpaid invoices submitted 
+--by each vendor. Use a derived table that returns MAX(InvoiceTotal) 
+--grouped by VendorID, filtering for invoices with a balance due
+
+
+--In this question there are a few tricks. One you need to get the Max of the invoice
+--total. This is in the Invoices Table because that is where the Invoice
+--owed amounts are. And we are checking how much they owe. 'Where' contains the
+--greater than 0 because they have to owe money to be considered here.
+-- The group by Vendor Exists because we are trying to see EACH Vendor individually 
+--before smashing them together.
+-- The 'AS' condition on the bottom has to be there because
+-- the FROM has to have a name, it cant just be a variable.
+-- Once all of the subquery SELECT statement is finished we need to then
+-- add up 'Invoice MAX) becase we want to see them all added up together.
+
+--SELECT SUM(InvoiceMax) AS BigPay
+--FROM (SELECT VendorID, MAX(InvoiceTotal) AS InvoiceMax
+--	FROM Invoices
+--	WHERE InvoiceTotal - PaymentTotal - CreditTotal >0
+--	GROUP BY VendorID) AS InvoiceMax
+
+	--7. Write a SELECT statement that returns the name, 
+	--city, and state of each vendor that’s located in a unique city 
+	--and state. In other words, don’t include vendors that have a city 
+	--and state in common with another vendor.
+
+	--------------------------------
+	--This was my first try on making ANY code that would get the right results
+	--It was wrong because there are multiple of the same city/State coming through.
+	-- I think either a strange union or a a use of DISTINCT might fix it
+
+--SELECT v1.VendorName, v1.VendorCity, v1.VendorState
+--FROM Vendors AS v1 JOIN Vendors AS v2
+--	ON v1.VendorID = v2.VendorID
+--WHERE (v1.VendorCity + v1.VendorCity <> v2.VendorCity + v2.VendorState)
+--ORDER By VendorState, VendorCity;
+
+-----------------------------------------
+-- DISTINCT got the exact same results.... which is weird to me but w/e
+---------------
+
+--SELECT DISTINCT v1.VendorCity + v1.VendorState, v1.VendorName
+--FROM Vendors AS v1 JOIN Vendors AS v2
+--	ON v1.VendorID = v2.VendorID
+--WHERE (v1.VendorCity + v1.VendorCity <> v2.VendorCity + v2.VendorState);
+
+----------------------------------------------------
+-- This question was kinda hard but I found out that if you just do a self join
+--through a subquery(should have known considering it is the subquery chapter)
+-- you get the answer pretty easily... I only added 'having count' because I needed
+-- to make this aggregated BUT Count(*) doesnt really do anything here except act
+-- as a placeholder.
+ 
+--SELECT VendorName, VendorCity,VendorState
+--FROM Vendors
+--WHERE VendorState + VendorCity NOT IN
+--	(SELECT VendorState + VendorCity
+--		FROM Vendors
+--		GROUP BY VendorState + VendorCity
+--		HAVING COUNT(*) >1)
+--ORDER BY VendorState, VendorCity
+			
+
+--8. Write a SELECT statement that returns four columns: 
+--VendorName, InvoiceNumber, InvoiceDate, and InvoiceTotal. 
+--Return one row per vendor, representing the vendor’s invoice w
+--ith the earliest date+
+
+---------------------------------------------------------
+--My first try was shortsighted. I thought I could get away with 2 tables
+--but the issue is that I need 3 layers of querys to finish this question.
+--OR Maybe a JOIN that then has a sub query in it. The reason why is that we need
+--to have MIN(InvoiceDate) which will require an aggregated funciton with GROUP BY.
+-- I also need to combine the Vendor And invocie table... I might do a self-join-subquery
+-- to get rid of all of the other invoices that are not the earliest date.
+
+------------------------------------
+--FIRST TRY
+-----------------------------------
+--SELECT VendorName, InvoiceNumber, InvoiceDate, InvoiceTotal
+--FROM Invoices
+--WHERE MIN(InvoiceDate) = (SELECT VendorID
+--	FROM Vendors
+--	GROUP BY VendorsName
+--	HAVING COUNT(*) > 1)
+--ORDER BY VendorName
+-------------------------------------------
+--After looking at this next code I realized that this self join is a little
+--trickier than I thought originally. Also the MIN(InvoiceDate) was never used.
+--I need that to be on the subquery Select statement.
+-----------------------------------------------
+--SELECT VendorName, InvoiceNumber, InvoiceDate, InvoiceTotal
+--FROM Invoices AS i JOIN Vendors AS v
+--	ON i.VendorID = v.VendorID
+--WHERE InvoiceDate IN
+--	(SELECT i.VendorID 
+--	FROM i.VendorID AS i2
+--	WHERE i.VendorID = i2.VendorID)
+--ORDER BY VendorName;
+-------------------------------------
+--Oh it actually worked :) It was a lot of trial and error but the logic holds
+--------------------------------------
+--SELECT VendorName, InvoiceNumber, InvoiceDate, InvoiceTotal
+--FROM Invoices AS i JOIN Vendors AS v
+--	ON i.VendorID = v.VendorID
+--WHERE InvoiceDate IN
+--	(SELECT MIN(InvoiceDate)
+--	FROM Invoices AS i2
+--	WHERE i.VendorID = i2.VendorID)
+--ORDER BY VendorName;
+
+--9.Rewrite exercise 6 so it uses a common table expression 
+--(CTE) instead of a derived table.
+--Write a SELECT statement that returns a single value that 
+--represents the sum of the largest unpaid invoices submitted 
+--by each vendor. Use a derived table that returns MAX(InvoiceTotal) 
+--grouped by VendorID, filtering for invoices with a balance due
+
+-- Its LATE... Ill do this in the morning
+
+--CHAPTER 7 Homework
+
+--1. Write SELECT INTO statements to create two test tables named 
+--VendorCopy and InvoiceCopy that are complete copies of the Vendors 
+--and Invoices tables. If VendorCopy and InvoiceCopy already exist, 
+--first code two DROP TABLE statements to delete them.
+
+--SELECT *
+--INTO VendorCopy
+--FROM Vendors
+
+--SELECT *
+--INTO InvoiceCopy
+--FROM Invoices
+
+--DROP TABLE VendorCopy;
+--DROP TABLE InvoiceCopy;
+
+--2. Write an INSERT statement that adds a row to the InvoiceCopy table 
+--with the following values: 
+--VendorID: 32 
+--InvoiceTotal: $434.58 
+--TermsID: 2 
+--InvoiceNumber: AX-014-027 
+--PaymentTotal: $0.00 
+--InvoiceDueDate: 05/8/2020 
+--InvoiceDate: 4/21/2020 
+--CreditTotal: $0.00 
+--PaymentDate: null
+
+--INSERT InvoiceCopy
+--VALUES (32, 'AX-014-027', '2012-6-21', 434.58, 0, 0,
+--        2, '2012-07-08', NULL);
+
+--3. Write an INSERT statement that adds a row to the VendorCopy 
+--table for each non-California vendor in the Vendors table. 
+--(This will result in duplicate vendors in the VendorCopy table).
+
+--I learned you can not do the SELECT * here; its a rule of INSERT. So you have to
+--manually do them all
+
+--INSERT VendorCopy
+--SELECT VendorName, VendorAddress1, VendorAddress2, VendorCity, VendorState, 
+--		VendorZipCode, VendorPhone, VendorContactLName, VendorContactFName,
+--		DefaultTermsID, DefaultAccountNo
+--FROM Vendors
+--WHERE VendorState <> 'CA'
+
+--4. Write an UPDATE statement that modifies the VendorCopy table. 
+--Change the default account number to 403 for each vendor that has a 
+--default account number of 400
+
+--UPDATE VendorCopy
+--SET DefaultAccountNo = 403
+--WHERE DefaultAccountNo = 400;
+
+--5. Write an UPDATE statement that modifies the InvoiceCopy table. 
+--Change the PaymentDate to today’s date and the PaymentTotal to the 
+--balance due for each invoice with a balance due. Set today’s date 
+--with a literal date string, or use the GETDATE() function
+
+-- The wording on this one was tricky; PaymentTotal = Invoice - CreditTotal
+--UPDATE InvoiceCopy
+--SET PaymentDate = GETDATE(),
+--	PaymentTotal = InvoiceTotal - CreditTotal
+--WHERE (InvoiceTotal - PaymentTotal - CreditTotal) >0;
+
+--6. Write an UPDATE statement that modifies the InvoiceCopy table. 
+--Change TermsID to 2 for each invoice that’s from a vendor with a 
+--DefaultTermsID of 2. Use a subquery.
+
+--I tried to use Vendors instead of VendorCopy in the Subquery... 
+--I am unsure why it is VendorCopy to be honest... Sleepy...
+
+--UPDATE InvoiceCopy
+--SET TermsID = 2
+--WHERE VendorID IN
+--		(SELECT VendorID
+--		FROM VendorCopy
+--		WHERE DefaultTermsID = 2);
+
+--7.Solve exercise 6 using a join rather than a subquery.
+
+--I think JOIN makes more sense(at least to me) than subqueries do for simple concepts.
+--UPDATE InvoiceCopy
+--SET TermsID = 2
+--FROM InvoiceCopy JOIN VendorCopy
+--	ON InvoiceCopy.VendorID = VendorCopy.VendorID
+--WHERE DefaultTersID =2;
+
+--8. Write a DELETE statement that deletes all vendors 
+--in the state of Minnesota from the VendorCopy table
+
+--DELETE VendorCopy
+--WHERE VendorState = 'MN';
+
+--9. Write a DELETE statement for the VendorCopy table. 
+--Delete the vendors that are located in states from which 
+--no vendor has ever sent an invoice.
+
+--Hint: Use a subquery coded with “SELECT DISTINCT VendorState” 
+--introduced with the NOT IN operato
+
+--Not going to lie, I just took this after failing once on it... I am very sleepy
+--DELETE VendorCopy
+--WHERE VendorState NOT IN (SELECT DISTINCT VendorState
+--			FROM VendorCopy JOIN InvoiceCopy
+--				ON VendorCopy.VendorID = InvoiceCopy.VendorID);
+		
