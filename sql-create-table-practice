@@ -1,0 +1,39 @@
+Use PlayerBase;
+
+CREATE TABLE Players(Id INT PRIMARY KEY IDENTITY(1,1),
+AccountID INT NOT NULL,
+AccountName VARCHAR(18) NOT NULL,
+AccountPassword VARCHAR(18) NOT NULL,
+MembershipStatus BIT NOT NULL DEFAULT 0,
+BannedStatus BIT NOT NULL DEFAULT 0,
+CharacterName VARCHAR(18) NOT NULL,
+AccountEmail VARCHAR(50) NOT NULL);
+
+Insert INTO Players(AccountID, AccountName, AccountPassword,MembershipStatus,BannedStatus,
+					CharacterName, AccountEmail)
+	VALUES (1,'PrincessKairi', 'DEFAULT_PASSWORD', 1, 0, 'Princess', 'Email@Gmail.com');
+
+
+	SELECT *
+	FROM Players
+CREATE TABLE Characters
+	(CharacterName VARCHAR(18) NOT NULL PRIMARY KEY,
+	AccountID INT NOT NULL REFERENCES Players(Id),
+	--CharacterClass
+	--CharacterRace 
+	CharacterLvl INT NOT NULL DEFAULT 1,
+	CharacterCurrentExp INT NOT NULL DEFAULT 0,
+	CharacterLvlUpExp INT NOT NULL DEFAULT 120
+	);
+
+CREATE TABLE CharacterInv(CharacterId INT PRIMARY KEY IDENTITY(1,1),
+	InventoryFull INT NOT NULL DEFAULT 18,
+	InventoryCurrent INT NOT NULL DEFAULT 0
+	);
+
+CREATE TABLE Creatures(CreatureId INT PRIMARY KEY IDENTITY(1,1),
+	CreatureName VARCHAR(50),
+	CreatureDescription VARCHAR(800),
+	CreatureDifficulty INT NOT NULL DEFAULT 1,
+	CreaturePhotoID IMAGE NOT NULL
+	);
